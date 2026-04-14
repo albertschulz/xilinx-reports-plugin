@@ -88,16 +88,21 @@ public class VivadoUtilizationParser extends AbstractMemoryMapParser implements 
         CharSequence seq = createCharSequenceFromFile(f);
         MemoryMapConfigMemory items = new MemoryMapConfigMemory();
 
-        Matcher sectionMatched = Pattern.compile("^\\| (?:([^\\|]+)\\|){5}$", Pattern.MULTILINE).matcher(seq);
+        // Vivado pre-2020 wrote 5-column rows (Site Type | Used | Fixed | Available | Util%).
+        // Vivado 2020+ added a "Prohibited" column, making rows 6-column. Match either width.
+        Matcher sectionMatched = Pattern.compile("^\\| (?:([^\\|]+)\\|){5,6}$", Pattern.MULTILINE).matcher(seq);
 
         while (sectionMatched.find()) {
             //split returns an empty string for the first group because there is nothing in front of the first separator
             String[] cells = sectionMatched.group(0).split("\\|");
-            if (cells[4].trim().matches("\\d+")) {
+            // For 5-column rows: cells.length == 6, Available is cells[4].
+            // For 6-column rows: cells.length == 7, Available is cells[5].
+            int availableIdx = cells.length >= 7 ? 5 : 4;
+            if (cells[availableIdx].trim().matches("\\d+")) {
                 String name = cells[1].trim().replace(' ', '_').replace("*", "");
                 // We can use fractional BRAMS, so we have to parse as a float.
                 int used = (int) Float.parseFloat(cells[2].trim());
-                int total = Integer.parseUnsignedInt(cells[4].trim());
+                int total = Integer.parseUnsignedInt(cells[availableIdx].trim());
                 int unused = total - used;
 
                 String total_str = "0x" + Integer.toHexString(total);

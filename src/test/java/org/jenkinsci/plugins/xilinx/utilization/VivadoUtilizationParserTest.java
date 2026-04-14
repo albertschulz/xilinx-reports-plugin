@@ -81,4 +81,39 @@ public class VivadoUtilizationParserTest {
         }
         assertEquals(assertions, myMap.size());
     }
+
+    /**
+     * Vivado 2020+ adds a "Prohibited" column to the utilization tables, making them
+     * 6 columns wide instead of 5. Verify the parser handles the modern format.
+     */
+    @Test
+    public void getResourcesVivado2022() throws IOException {
+        File f = new File(VivadoUtilizationParserTest.class.getResource("utilization_v2022.rpt").getFile());
+        MemoryMapConfigMemory configMemory = dut.getResources(f);
+
+        Map<String, int[]> expected = new HashMap<>();
+        // name -> {used, available}
+        expected.put("CLB_LUTs",                new int[]{1748, 117120});
+        expected.put("LUT_as_Logic",            new int[]{1723, 117120});
+        expected.put("LUT_as_Memory",           new int[]{25,    57600});
+        expected.put("CLB_Registers",           new int[]{5127, 234240});
+        expected.put("Register_as_Flip_Flop",   new int[]{5127, 234240});
+        expected.put("Block_RAM_Tile",          new int[]{22,      144});
+        expected.put("RAMB36/FIFO",             new int[]{22,      144});
+        expected.put("RAMB18",                  new int[]{0,       288});
+        expected.put("URAM",                    new int[]{0,        64});
+        expected.put("DSPs",                    new int[]{0,      1248});
+
+        int seen = 0;
+        for (MemoryMapConfigMemoryItem item : configMemory) {
+            int[] golden = expected.get(item.getName());
+            if (golden == null) continue;
+            int used      = Integer.parseInt(item.getUsed().replace("0x", ""), 16);
+            int available = Integer.parseInt(item.getLength().replace("0x", ""), 16);
+            assertEquals(item.getName() + " used",      golden[0], used);
+            assertEquals(item.getName() + " available", golden[1], available);
+            seen++;
+        }
+        assertEquals("Should have parsed all expected rows", expected.size(), seen);
+    }
 }
