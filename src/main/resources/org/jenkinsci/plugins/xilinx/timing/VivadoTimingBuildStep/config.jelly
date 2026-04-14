@@ -1,0 +1,13 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
+         xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <style type="text/css">
+        td.setting-name {
+        vertical-align:middle;
+        }
+    </style>
+    <f:entry field="chosenParsers" title="Timing reports">
+        <f:hetero-list name="chosenParsers" oneEach="false" items="${instance.chosenParsers}"
+                       addCaption="Add report" deleteCaption="Remove report" descriptors="${descriptor.getParsers()}"/>
+    </f:entry>
+</j:jelly>

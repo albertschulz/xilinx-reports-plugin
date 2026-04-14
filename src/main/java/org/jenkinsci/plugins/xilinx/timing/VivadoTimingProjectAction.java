@@ -1,24 +1,24 @@
-package org.jenkinsci.plugins.xilinx.utilization;
+package org.jenkinsci.plugins.xilinx.timing;
 
 import hudson.model.Job;
 import hudson.model.Run;
 import net.praqma.jenkins.memorymap.MemoryMapBuildAction;
 import net.praqma.jenkins.memorymap.MemoryMapProjectAction;
 
-public class VivadoUtilizationProjectAction extends MemoryMapProjectAction {
+public class VivadoTimingProjectAction extends MemoryMapProjectAction {
 
-    public VivadoUtilizationProjectAction(Job<?, ?> project) {
+    public VivadoTimingProjectAction(Job<?, ?> project) {
         super(project);
     }
 
     @Override
     public String getDisplayName() {
-        return "Xilinx Utilization";
+        return "Xilinx Timing";
     }
 
     @Override
     public String getSearchUrl() {
-        return "Xilinx Utilization";
+        return "Xilinx Timing";
     }
 
     @Override
@@ -28,23 +28,21 @@ public class VivadoUtilizationProjectAction extends MemoryMapProjectAction {
 
     @Override
     public String getUrlName() {
-        return "xilinx-utilization";
+        return "xilinx-timing";
     }
 
-    // The parent's lookups call Run.getAction(MemoryMapBuildAction.class), which returns
-    // any subclass — so a job that publishes both Utilization and Timing ends up with
-    // each project page showing whichever build action was attached first. Override to
-    // pin lookups to our concrete subclass.
+    // See VivadoUtilizationProjectAction for the rationale — pin lookups to our concrete
+    // subclass so the Timing page never picks up Utilization data and vice versa.
     @Override
     public MemoryMapBuildAction getLatestActionInProject() {
         Run<?, ?> last = getProject().getLastCompletedBuild();
-        return last == null ? null : last.getAction(VivadoUtilizationBuildAction.class);
+        return last == null ? null : last.getAction(VivadoTimingBuildAction.class);
     }
 
     @Override
     public MemoryMapBuildAction getLastApplicableMemoryMapResult() {
         for (Run<?, ?> run = getProject().getLastCompletedBuild(); run != null; run = run.getPreviousBuild()) {
-            VivadoUtilizationBuildAction a = run.getAction(VivadoUtilizationBuildAction.class);
+            VivadoTimingBuildAction a = run.getAction(VivadoTimingBuildAction.class);
             if (a != null && a.isValidConfigurationWithData()) {
                 return a;
             }
